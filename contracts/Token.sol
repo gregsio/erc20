@@ -9,6 +9,8 @@ contract Token {
     uint256 public decimals = 18;
     uint256 public totalSupply;
     mapping (address => uint256) public balanceOf;
+    event Transfer(address indexed from, address indexed to, uint256 value);
+
 
 constructor(string memory _name, string memory _symbol, uint256 _totalSupply) {
     name = _name;
@@ -17,16 +19,22 @@ constructor(string memory _name, string memory _symbol, uint256 _totalSupply) {
     balanceOf[msg.sender] = totalSupply;
 }
 
+function transfer(address _to, uint256 _value) public returns (bool success){
+    require(balanceOf[msg.sender] >= _value, 'Insufficient funds');
+    require(_to != address(0), 'Invalid address');
+
+    balanceOf[msg.sender] -= _value;
+    balanceOf[_to] += _value;
+
+    emit Transfer(msg.sender,_to, _value);
+    return true;
+}
+
+
 // TODO:
-// function transfer(address _to, uint256 _value) public returns (bool success)
 // function transferFrom(address _from, address _to, uint256 _value) public returns (bool success)
 // function approve(address _spender, uint256 _value) public returns (bool success)
 // function allowance(address _owner, address _spender) public view returns (uint256 remaining)
 
 
-
-
 }
-
-
-
