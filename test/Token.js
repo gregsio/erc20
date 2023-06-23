@@ -112,4 +112,45 @@ describe('Token', () => {
             })
         })
     })
+    describe('Transfers delegating tokens', () => {
+        let amount, transaction, result
+        beforeEach(async () => {
+            amount = tokens(100)
+            transaction = await token.connect(deployer).approve(exchange.address, amount)
+            result =  await transaction.wait()
+        })
+        describe('Success', () => {
+            beforeEach(async () => {
+                amount = tokens(100)
+                transaction = await token.connect(exchange).transferFrom(deployer.address, receiver.address, amount)
+                result =  await transaction.wait()
+            })
+            it ('Transfers delegated tokens', async () => {
+                expect(await token.connect(deployer).balanceOf(deployer.address)).to.equal(tokens(999900))
+            })
+            it ('Updates allowance', async () => {
+                expect(await token.allowance(deployer.address,exchange.address)).to.equal(0)
+            })
+
+            it('emits a Transfer event', async () => {
+                const event = result.events[0]
+                expect(event.event).to.equal('Transfer')
+
+                const args = event.args
+                expect(args.from).to.equal(deployer.address)
+                expect(args.to).to.equal(receiver.address)
+                expect(args.value).to.equal(amount)
+            })
+        })
+        describe('Failures', () => {
+            const invalidDelegatedAmount = tokens(101)     
+            it ('fails to transfer more than the allowance', async () => {
+                await expect(token.connect(exchange).transferFrom(deployer.address, receiver.address, invalidDelegatedAmount)).to.be.reverted
+            })
+            it ('fails to transfer non delegated tokens', async () => {
+                await expect(token.connect(exchange).transferFrom(receiver.address, deployer.address, invalidDelegatedAmount)).to.be.reverted
+            })
+        })
+
+    })
 })
